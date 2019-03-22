@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <title>Basic Scatter Plot</title>
+    <style>
+      body {
+        margin: 0px
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="480" height="250"></svg>
+    <script>
+      const xValue = d => d.GDPperCap;
+      const yValue = d =>  d.GDPperOut;
+      const rValue = d => d.Population; //
+      const rLabel = d => d.Country;
+      const margin = { left: 50, right: 20, top: 20, bottom: 40 };
+
+      const svg = d3.select('svg');
+      const width = svg.attr('width');
+      const height = svg.attr('height');
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+      const innerSize = 10; //
+
+      const g = svg.append('g')
+          .attr('transform', `translate(${margin.left}, ${margin.top})`);
+      const xAxisG = g.append('g')
+          .attr('transform', `translate(0, ${innerHeight})`);
+      const yAxisG = g.append('g');
+
+      const xScale = d3.scaleLinear();
+      const yScale = d3.scaleLinear();
+      const rScale = d3.scaleSqrt(); //
+       
+
+      const xAxis = d3.axisBottom().scale(xScale);
+      const yAxis = d3.axisLeft().scale(yScale);
+
+      const row = d => {
+        d.GDPperOut = +d.GDPperOut;
+        d.GDPperCap = +d.GDPperCap;
+        d.Population = +d.Population; //
+        return d;
+      };
+
+
+     
+
+      d3.csv('demo.csv', row, data => {
+        xScale
+          .domain([0,d3.max(data, xValue)])
+          .range([0, innerWidth]);
+
+        yScale
+          .domain([0,d3.max(data, yValue)])
+          .range([innerHeight, 0]);
+
+        /////
+        rScale
+          .domain([0, d3.max(data, rValue)])
+          .range([0, innerSize]);
+
+        g.selectAll('circle').data(data)
+          .enter().append('circle')
+            .attr('cx', d => xScale(xValue(d)))
+            .attr('cy', d => yScale(yValue(d)))
+            .attr('r', d => rScale(rValue(d)))
+            .style('fill', function(d) { 
+
+              if(rLabel(d)=='USA')
+                {return 'purple';}
+              else if (rLabel(d) == 'CHN')
+                {return 'red';} 
+              else if(rLabel(d) == 'IND')
+                {return 'green'}
+              else if(rLabel(d) == 'AUS')
+                {return 'blue'}
+              else if(rLabel(d) == 'JPN')
+                {return 'pink'}
+
+
+            })
+
+            .style('opacity', 0.5)
+
+            .on('mouseover', function(d, i) {
+              console.log("mouseover on", this);
+              // make the mouseover'd element
+              // bigger and red
+              d3.select(this)
+                .transition()
+                .duration(10)
+                .style('opacity', 1);
+
+            })
+            .on('mouseout', function(d, i) {
+              console.log("mouseout", this);
+              // return the mouseover'd element
+              // to being smaller and black
+              d3.select(this)
+                .transition()
+                .duration(10)
+                .style('opacity', 0.5);
+            })
+
+        g.selectAll('text').data(data)
+          .enter().append('text')
+            .attr('x', d => xScale(xValue(d)) - rScale(rValue(d)))
+            .attr('y', d => yScale(yValue(d)) - rScale(rValue(d)) )
+            .attr("font-size","8px")
+            .text(d => rLabel(d));                        //
+
+        xAxisG.call(xAxis);
+        yAxisG.call(yAxis);});
+
+      svg.append("text")             
+      .attr("transform",
+            "translate(" + (width/2) + " ," + 
+                           (height -5) + ")")
+      .style("text-anchor", "middle")
+      .text("GDP / Capita");
+
+      svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -4)
+      .attr("x", -height/2)
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("GDP / Gross Output");    
+
+    </script>
+  </body>
+</html>
